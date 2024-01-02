@@ -12,6 +12,7 @@ typedef struct Class {
     char className[30];
     Student* studentList;
     char toyList[5][30];
+    int toyListCount;
     struct Class* next;
 } Class;
 
@@ -88,29 +89,27 @@ int main() {
 
 void createClass(Class** classList) {
     Class* newClass = (Class*)malloc(sizeof(Class));
-    newClass->next = NULL;
-    char className[30];
+    newClass->next = *classList;
+    *classList = newClass;
     printf("Sinif adini girin: ");
-    scanf("%s", className);
-    strcpy(newClass->className, className);
-    classList = &newClass;
-    printf("Sinif olusturuldu.\n");
+    scanf("%s", newClass->className);
+    newClass->studentList = NULL;
+    printf("Sinif olusturuldu: %s\n", newClass->className);
 }
 
 void addStudent(Class* classList) {
-    // classList linked listi boş ise öğrenci eklenemez.
     if (classList == NULL) {
         printf("Ogrenci eklemek icin once sinif olusturmalisiniz.\n");
         return;
     }
+
     char className[30];
-    printf("Sinif adini girin, ana menüye dönmek için menu yazın: ");
+    printf("Sinif adini girin, ana menüye dönmek için 'menu' yazın: ");
     scanf("%s", className);
     if (strcmp(className, "menu") == 0) {
         return;
     }
 
-    // classList linked listinde className ile eşleşen bir sınıf var mı kontrol edilir.
     Class* currentClass = classList;
     while (currentClass != NULL) {
         if (strcmp(currentClass->className, className) == 0) {
@@ -119,65 +118,50 @@ void addStudent(Class* classList) {
         currentClass = currentClass->next;
     }
 
-    // Eğer eşleşen bir sınıf yoksa hata mesajı verilir.
     if (currentClass == NULL) {
         printf("Boyle bir sinif bulunamadi.\n");
         return;
     }
 
-    // Eğer eşleşen bir sınıf varsa öğrenci eklenir.
     Student* newStudent = (Student*)malloc(sizeof(Student));
-    newStudent->next = NULL;
     printf("Ogrenci adini girin: ");
     scanf("%s", newStudent->name);
     printf("Ogrenci yasini girin: ");
     scanf("%d", &newStudent->age);
 
-    // Eğer sınıfın öğrenci listesi boş ise yeni öğrenci ilk öğrenci olarak atanır.
-    if (currentClass->studentList == NULL) {
-        currentClass->studentList = newStudent;
-    } else {
-        // Eğer sınıfın öğrenci listesi boş değilse son öğrenciye yeni öğrenci eklenir.
-        Student* currentStudent = currentClass->studentList;
-        while (currentStudent->next != NULL) {
-            currentStudent = currentStudent->next;
-        }
-        currentStudent->next = newStudent;
-    }
-    printf("Ogrenci eklendi.\n");
+    newStudent->next = currentClass->studentList;
+    currentClass->studentList = newStudent;
+
+    printf("Ogrenci eklendi: %s, %d yasinda\n", newStudent->name, newStudent->age);
 }
 
 void listClasses(Class* classList) {
-    // Sınıfları listeleme işlemi burada gerçekleştirilir.
-
-    // Eğer sınıf listesi boş ise hata mesajı verilir.
     if (classList == NULL) {
         printf("Listelenecek sinif bulunamadi.\n");
         return;
     }
 
-    // Sınıflar listelenir.
-    Class* currentClass = classList;
-    while (currentClass != NULL) {
-        printf("%s\n", currentClass->className);
-        currentClass = currentClass->next;
+    printf("Siniflar:\n");
+    while (classList != NULL) {
+        printf("- %s\n", classList->className);
+        classList = classList->next;
     }
-
-    return;
 }
 
 void listStudents(Class* classList) {
-    // Öğrencileri listeleme işlemi burada gerçekleştirilir.
+    if (classList == NULL) {
+        printf("Once sinif olusturmalisiniz.\n");
+        return;
+    }
 
-    // Hangi sınıfın öğrencileri listelenecek kullanıcıdan alınır.
     char className[30];
-    printf("Sinif adini girin, ana menüye dönmek için menu yazın: ");
+    printf("Hangi sinifin ogrencilerini listelemek istiyorsunuz? ('menu' yazarak ana menuye donun) ");
     scanf("%s", className);
+
     if (strcmp(className, "menu") == 0) {
         return;
     }
 
-    // classList linked listinde className ile eşleşen bir sınıf var mı kontrol edilir.
     Class* currentClass = classList;
     while (currentClass != NULL) {
         if (strcmp(currentClass->className, className) == 0) {
@@ -186,38 +170,33 @@ void listStudents(Class* classList) {
         currentClass = currentClass->next;
     }
 
-    // Eğer eşleşen bir sınıf yoksa hata mesajı verilir.
     if (currentClass == NULL) {
         printf("Boyle bir sinif bulunamadi.\n");
         return;
     }
 
-    // Eğer eşleşen bir sınıf varsa öğrenciler listelenir.
+    printf("Ogrencileri listelenen sinif: %s\n", currentClass->className);
+
     Student* currentStudent = currentClass->studentList;
     while (currentStudent != NULL) {
-        printf("%s %d\n", currentStudent->name, currentStudent->age);
+        printf("- %s, %d yasinda\n", currentStudent->name, currentStudent->age);
         currentStudent = currentStudent->next;
     }
-
 }
 
 void removeClass(Class** classList) {
-    // Sınıf silme işlemi burada gerçekleştirilir.
-
-    // Eğer hiç sinif yok ise hata mesajı verilir.
     if (*classList == NULL) {
         printf("Silinecek sinif bulunamadi.\n");
         return;
     }
 
-    printf("Silmek istediğiniz sinifin adini girin, ana menüye dönmek için menu yazın: ");
+    printf("Silmek istediğiniz sinifin adini girin, ana menüye dönmek için 'menu' yazın: ");
     char className[30];
     scanf("%s", className);
     if (strcmp(className, "menu") == 0) {
         return;
     }
 
-    // classList linked listinde className ile eşleşen bir sınıf var mı kontrol edilir.
     Class* previousClass = NULL;
     Class* currentClass = *classList;
     while (currentClass != NULL) {
@@ -228,34 +207,35 @@ void removeClass(Class** classList) {
         currentClass = currentClass->next;
     }
 
-    // Eğer eşleşen bir sınıf yoksa hata mesajı verilir.
     if (currentClass == NULL) {
         printf("Boyle bir sinif bulunamadi.\n");
         return;
     }
 
-    // Eğer eşleşen bir sınıf varsa sınıf silinir.
-    if(previousClass == NULL) {
+    if (previousClass == NULL) {
         *classList = currentClass->next;
     } else {
         previousClass->next = currentClass->next;
     }
 
-
+    free(currentClass);
+    printf("Sinif silindi: %s\n", className);
 }
 
 void removeStudent(Class* classList) {
-    // Öğrenci silme işlemi burada gerçekleştirilir.
+    if (classList == NULL) {
+        printf("Once sinif olusturmalisiniz.\n");
+        return;
+    }
 
-    // Hangi sınıfın öğrencileri listelenecek kullanıcıdan alınır.
     char className[30];
-    printf("Öğrencinin bulunduğu Sinifin adini girin, ana menüye dönmek için menu yazın: ");
+    printf("Hangi sinifin ogrencisini silmek istiyorsunuz? ('menu' yazarak ana menuye donun) ");
     scanf("%s", className);
+
     if (strcmp(className, "menu") == 0) {
         return;
     }
 
-    // classList linked listinde className ile eşleşen bir sınıf var mı kontrol edilir.
     Class* currentClass = classList;
     while (currentClass != NULL) {
         if (strcmp(currentClass->className, className) == 0) {
@@ -264,27 +244,18 @@ void removeStudent(Class* classList) {
         currentClass = currentClass->next;
     }
 
-    // Eğer eşleşen bir sınıf yoksa hata mesajı verilir.
     if (currentClass == NULL) {
         printf("Boyle bir sinif bulunamadi.\n");
         return;
     }
 
-    // Eğer eşleşen bir sınıf varsa öğrenciler listelenir.
-    printf("Silmek istediğiniz öğrencinin adini girin, ana menüye dönmek için menu yazın : ");
+    printf("Silmek istediğiniz ogrencinin adini girin, ana menüye dönmek için 'menu' yazın: ");
     char studentName[50];
     scanf("%s", studentName);
     if (strcmp(studentName, "menu") == 0) {
         return;
     }
 
-    // Eğer sınıfın öğrenci listesi boş ise hata mesajı verilir.
-    if (currentClass->studentList == NULL) {
-        printf("Silinecek öğrenci bulunamadi.\n");
-        return;
-    }
-
-    // Eğer sınıfın öğrenci listesi boş değilse öğrenci silinir.
     Student* previousStudent = NULL;
     Student* currentStudent = currentClass->studentList;
     while (currentStudent != NULL) {
@@ -295,28 +266,132 @@ void removeStudent(Class* classList) {
         currentStudent = currentStudent->next;
     }
 
-    // Eğer eşleşen bir öğrenci yoksa hata mesajı verilir.
     if (currentStudent == NULL) {
         printf("Boyle bir ogrenci bulunamadi.\n");
         return;
     }
 
-    // Eğer eşleşen bir öğrenci varsa öğrenci silinir.
-    if(previousStudent == NULL) {
+    if (previousStudent == NULL) {
         currentClass->studentList = currentStudent->next;
     } else {
         previousStudent->next = currentStudent->next;
     }
+
+    free(currentStudent);
+    printf("Ogrenci silindi: %s, %s\n", studentName, className);
 }
 
 void addToy(Class* classList) {
-    // Oyuncak ekleme işlemi burada gerçekleştirilir.
+    if (classList == NULL) {
+        printf("Once sinif olusturmalisiniz.\n");
+        return;
+    }
+
+    char className[30];
+    printf("Hangi sinifa oyuncak eklemek istiyorsunuz? ('menu' yazarak ana menuye donun) ");
+    scanf("%s", className);
+
+    if (strcmp(className, "menu") == 0) {
+        return;
+    }
+
+    Class* currentClass = classList;
+    while (currentClass != NULL) {
+        if (strcmp(currentClass->className, className) == 0) {
+            break;
+        }
+        currentClass = currentClass->next;
+    }
+
+    if (currentClass == NULL) {
+        printf("Boyle bir sinif bulunamadi.\n");
+        return;
+    }
+
+    if (currentClass->toyListCount == 5) {
+        printf("Sinifin oyuncak kapasitesi dolu.\n");
+        return;
+    }
+
+    printf("Oyuncak adini girin: ");
+    scanf("%s", currentClass->toyList[currentClass->toyListCount]);
+    currentClass->toyListCount++;
+
+    printf("Oyuncak eklendi: %s, %s sinifi\n", currentClass->toyList[currentClass->toyListCount - 1], className);
 }
 
 void removeToy(Class* classList) {
-    // Oyuncak çıkarma işlemi burada gerçekleştirilir.
+    if (classList == NULL) {
+        printf("Once sinif olusturmalisiniz.\n");
+        return;
+    }
+
+    char className[30];
+    printf("Hangi sinifin oyuncagini cikarmak istiyorsunuz? ('menu' yazarak ana menuye donun) ");
+    scanf("%s", className);
+
+    if (strcmp(className, "menu") == 0) {
+        return;
+    }
+
+    Class* currentClass = classList;
+    while (currentClass != NULL) {
+        if (strcmp(currentClass->className, className) == 0) {
+            break;
+        }
+        currentClass = currentClass->next;
+    }
+
+    if (currentClass == NULL) {
+        printf("Boyle bir sinif bulunamadi.\n");
+        return;
+    }
+
+    if (currentClass->toyListCount == 0) {
+        printf("Sinifin oyuncak listesi bos.\n");
+        return;
+    }
+
+    printf("Oyuncak cikarildi: %s, %s sinifi\n", currentClass->toyList[currentClass ->toyListCount - 1], className);
+
+    currentClass->toyListCount--;
 }
 
 void listToys(Class* classList) {
-    // Oyuncakları listeleme işlemi burada gerçekleştirilir.
+    if (classList == NULL) {
+        printf("Once sinif olusturmalisiniz.\n");
+        return;
+    }
+
+    char className[30];
+    printf("Hangi sinifin oyuncaklarini listelemek istiyorsunuz? ('menu' yazarak ana menuye donun) ");
+    scanf("%s", className);
+
+    if (strcmp(className, "menu") == 0) {
+        return;
+    }
+
+    Class* currentClass = classList;
+    while (currentClass != NULL) {
+        if (strcmp(currentClass->className, className) == 0) {
+            break;
+        }
+        currentClass = currentClass->next;
+    }
+
+    if (currentClass == NULL) {
+        printf("Boyle bir sinif bulunamadi.\n");
+        return;
+    }
+
+    if (currentClass->toyListCount == 0) {
+        printf("%s sinifinin oyuncak listesi bos.\n", className);
+        return;
+    }
+
+    printf("%s sinifinin oyuncaklari:\n", className);
+    for (int i = 0; i < currentClass->toyListCount; ++i) {
+        printf("- %s\n", currentClass->toyList[i]);
+    }
 }
+
